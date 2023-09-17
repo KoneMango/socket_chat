@@ -346,7 +346,7 @@ void get_uid(myevent_s *ev)
     strcpy(ev->um.usr_id, str); 
 
 //读写文件
-    FILE *fp = fopen("/home/dd/01Linux/user_msg", "a+");
+    FILE *fp = fopen("user_msg", "a+");
     if(fp == NULL) 
     {
         write(ev->fd, "error\n", 6);
