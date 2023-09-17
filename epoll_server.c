@@ -9,6 +9,8 @@
 #include<ctype.h>
 #include<sys/socket.h>
 #include<arpa/inet.h>
+
+
 #define Port 7777
 #define MAX_EVENTS 1024
 typedef void (*call_back)(int, void*); 
@@ -343,6 +345,7 @@ void get_uid(myevent_s *ev)
     sprintf(str, "%05d", user_num + 1);   
     strcpy(ev->um.usr_id, str); 
 
+//读写文件
     FILE *fp = fopen("/home/dd/01Linux/user_msg", "a+");
     if(fp == NULL) 
     {
@@ -422,7 +425,8 @@ void logout(int cfd, void *arg)
 // 将保存用户信息的文件载入程序
 void load_usermsg()                 
 {
-    FILE *fp = fopen("/home/dd/01Linux/user_msg", "r");         // 打开保存已注册用户信息的文件
+    //读写文件
+    FILE *fp = fopen("user_msg", "r");         // 打开保存已注册用户信息的文件
     if(fp == NULL) sys_error("load error");
 
     while(!feof(fp))
