@@ -49,21 +49,26 @@ myevent_s g_events[MAX_EVENTS + 1];  // 用于保存每个文件描述符信息�
 #define ONLINE_MAX 100000
 int online_fd[ONLINE_MAX], l[ONLINE_MAX], r[ONLINE_MAX], fd_pos[ONLINE_MAX], idx, online_num;
 
+
+//双向链表可以快速的插入和删除；后期方便扩展，可以轻松移动用户位置；大小自由
 // 链表进行初始化 
 void list_init()
 {
     r[0] = 1, l[1] = 0;              // 下标0 表示链表左端点,  下标1表示链表右端点
-    idx = 2;
+    idx = 2;  // 下标2开始表示链表中的节点
     for(int i = 3; i < ONLINE_MAX; ++i) fd_pos[i] = -1;
 }
 
+
+
 // 往链表中插入一个在线用户
-void list_push(int fd)
+void list_push(int fd)//一个fd就是一个用户
 {
+    
     fd_pos[fd] = idx;
     online_fd[idx] = fd;
     r[idx] = r[0], l[idx]  = 0;
-    l[r[0]] = idx, r[0] = idx++;
+    l[r[0]] = idx, r[0] = idx++;  
     online_num++;                         // 在线人数++
 }
 
@@ -99,7 +104,11 @@ void sys_error(const char *str)
     exit(1);
 }
 
-// 重新设置监听事件
+
+
+//*************************core****************************
+
+// 重新设置监听事件 初始化
 void event_set(myevent_s *ev, int fd, int events, call_back fun, void *arg3)
 {
     ev->fd = fd ;
@@ -108,17 +117,21 @@ void event_set(myevent_s *ev, int fd, int events, call_back fun, void *arg3)
     ev->arg = arg3;
 }
 
+
+
 // 添加监听事件到树上
 void event_add(int epfd, myevent_s *ev)
 {
     struct epoll_event tep;
     tep.data.ptr = ev;
     tep.events = ev->events;
-    if(epoll_ctl(epfd, EPOLL_CTL_ADD, ev->fd, &tep) == -1)
+    if(epoll_ctl(epfd, EPOLL_CTL_ADD, ev->fd, &tep) == -1)//使用ctl增加事件
         printf("fail: epoll_ctl add fd: %d, events is %d\n",ev->fd, ev->events);
     else
         ev->status = 1, ev->last_active_time = time(NULL);
 }
+
+
 
 // 将事件从监听红黑树上摘除
 void event_del(int epfd, myevent_s *ev)
@@ -152,6 +165,7 @@ void cb_accept(int lfd, void * arg)
         printf("the client num is max\n");
         return;
     }
+
     struct myevent_s *ev = &g_events[i];
     int flag = fcntl(cfd, F_GETFL);             // 设置为非阻塞状态
     flag |= O_NONBLOCK;
@@ -164,6 +178,12 @@ void cb_accept(int lfd, void * arg)
     write(cfd, ms1, sizeof ms1);
 }
 
+
+
+//*************************core****************************
+
+
+
 // 登陆界面
 void login_menu(int cfd , void* arg)
 {
@@ -175,6 +195,7 @@ void login_menu(int cfd , void* arg)
         close_cfd(cfd, ev);
         return;
     }
+
     if(buf[0] == '1')           // 匿名用户登陆
     {
         sprintf(ev->um.usr_name, "匿名用户 %ld", time(NULL)) ;    // 设置匿名登陆的用户名
